@@ -1,0 +1,18 @@
+{
+  "num_samples": 100,
+  "mean_error_px": 3.3527862504547663,
+  "median_error_px": 0.0,
+  "max_error_px": 309.1156741415744,
+  "success_at_px": {
+    "1": 99.0,
+    "3": 99.0,
+    "5": 99.0
+  },
+  "mean_time_ms": 2061.513088999818,
+  "num_matched_true": 100,
+  "num_matched_false": 0,
+  "style": "beol_interconnect",
+  "failure_sample_ids": [
+    96
+  ]
+}
