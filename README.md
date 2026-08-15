@@ -189,6 +189,10 @@ python predict.py --search path/to/search.png --reference path/to/ref.png
 
 ---
 
+
+
+
+
 ## 4. Commands
 
 Run all commands from the repository root:
@@ -349,6 +353,7 @@ python evaluation/noise_sweep.py
 ```
 
 ```
+
 
 ---
 
