@@ -1,0 +1,39 @@
+{
+  "num_samples": 400,
+  "mean_error_px": 24.609236676387212,
+  "median_error_px": 0.0,
+  "max_error_px": 790.5823802741875,
+  "success_at_px": {
+    "1": 94.5,
+    "3": 94.5,
+    "5": 94.5
+  },
+  "mean_time_ms": 2642.8242252503696,
+  "num_matched_true": 400,
+  "num_matched_false": 0,
+  "style": "dram_octagonal",
+  "failure_sample_ids": [
+    4,
+    79,
+    90,
+    94,
+    106,
+    109,
+    125,
+    151,
+    167,
+    212,
+    229,
+    255,
+    264,
+    278,
+    280,
+    288,
+    291,
+    301,
+    326,
+    352,
+    371,
+    374
+  ]
+}

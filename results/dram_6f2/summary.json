@@ -1,0 +1,16 @@
+{
+  "num_samples": 400,
+  "mean_error_px": 0.2899137802864845,
+  "median_error_px": 0.0,
+  "max_error_px": 0.7071067811865476,
+  "success_at_px": {
+    "1": 100.0,
+    "3": 100.0,
+    "5": 100.0
+  },
+  "mean_time_ms": 2255.8099987506284,
+  "num_matched_true": 400,
+  "num_matched_false": 0,
+  "style": "dram_6f2",
+  "failure_sample_ids": []
+}

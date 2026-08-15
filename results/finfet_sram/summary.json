@@ -1,0 +1,33 @@
+{
+  "num_samples": 400,
+  "mean_error_px": 17.339344091489025,
+  "median_error_px": 0.0,
+  "max_error_px": 785.4934754662193,
+  "success_at_px": {
+    "1": 96.0,
+    "3": 96.0,
+    "5": 96.0
+  },
+  "mean_time_ms": 2533.595565749856,
+  "num_matched_true": 400,
+  "num_matched_false": 0,
+  "style": "finfet_sram",
+  "failure_sample_ids": [
+    13,
+    76,
+    84,
+    94,
+    125,
+    132,
+    237,
+    264,
+    265,
+    280,
+    301,
+    318,
+    326,
+    371,
+    372,
+    388
+  ]
+}
