@@ -185,3 +185,171 @@ Implements the exact hackathon contract:
 ```bash
 python predict.py --search path/to/search.png --reference path/to/ref.png
 ```
+
+
+---
+
+````md
+## 4. Commands
+
+Run all commands from the repository root:
+
+```bash
+cd semicon_appliedmaterials
+````
+
+### Generate datasets
+
+Pre-generated datasets are already included, so this is optional.
+
+```bash
+python Fixed/fixed_noise_data.py
+python Fixed/fixed_noise_data_dram.py
+python Fixed/fixed_noise_data_finfet6tsram.py
+python Fixed/fixed_noise_data_beol_interconnect.py
+```
+
+These generate 400 samples each in:
+
+```text
+Fixed/data_1/   # dram_octagonal
+Fixed/data_2/   # dram_6f2
+Fixed/data_3/   # finfet_sram
+Fixed/data_4/   # beol_interconnect
+```
+
+Each dataset contains `ref_XXX.png`, `search_XXX.png`, and `gt_XXX.json`.
+
+### Evaluate localization
+
+Run all four styles:
+
+```bash
+python cli.py evaluate
+```
+
+Run a single style:
+
+```bash
+python cli.py evaluate --style dram_octagonal
+```
+
+Valid styles:
+
+```text
+dram_octagonal
+dram_6f2
+finfet_sram
+beol_interconnect
+```
+
+Results are written to:
+
+```text
+results/<style>/
+├── results.csv
+└── summary.json
+```
+
+### Visualize failures
+
+```bash
+python cli.py visualize
+```
+
+For one style:
+
+```bash
+python cli.py visualize --style finfet_sram
+```
+
+Failure overlays are saved under:
+
+```text
+results/<style>/failures/
+```
+
+### Inspect a sample
+
+```bash
+python cli.py show --style dram_octagonal --sample 7
+```
+
+The preview is saved under:
+
+```text
+results/<style>/previews/
+```
+
+### Confusion matrix
+
+```bash
+python evaluation/confusion_matrix.py
+```
+
+Evaluates genuine and mismatched reference/search pairs and reports TP, TN, FP and FN.
+
+### Noise robustness
+
+```bash
+python evaluation/noise_sweep.py
+```
+
+Runs the Precision–Recall sweep at:
+
+```text
+1× / 2.5× / 5× / 10× noise
+```
+
+Outputs:
+
+```text
+results/
+├── precision_recall_vs_noise.json
+└── precision_recall_vs_noise.png
+```
+
+### Standalone prediction
+
+For one arbitrary image pair:
+
+```bash
+python predict.py --search search.png --reference ref.png
+```
+
+JSON output:
+
+```bash
+python predict.py --search search.png --reference ref.png --json
+```
+
+Batch prediction:
+
+```bash
+python predict.py --csv pairs.csv --out predictions.csv
+```
+
+### Recommended order
+
+```bash
+# Optional: regenerate datasets
+python Fixed/fixed_noise_data.py
+python Fixed/fixed_noise_data_dram.py
+python Fixed/fixed_noise_data_finfet6tsram.py
+python Fixed/fixed_noise_data_beol_interconnect.py
+
+# Evaluate
+python cli.py evaluate
+
+# Analyze failures
+python cli.py visualize
+
+# Additional analysis
+python evaluation/confusion_matrix.py
+python evaluation/noise_sweep.py
+```
+
+```
+```
+---
+
