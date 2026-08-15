@@ -50,45 +50,41 @@ The repository implements this end-to-end.
 
 ### 3.1 Repository Layout
 
+### 3.1 Repository Layout
+
+```text
 semicon_appliedmaterials/
-├── Fixed/                                      # Synthetic SEM pair generators + data
-│   ├── fixed_noise_data.py                     # dram_octagonal
-│   ├── fixed_noise_data_dram.py                # dram_6f2
-│   ├── fixed_noise_data_finfet6tsram.py        # finfet_sram
-│   ├── fixed_noise_data_beol_interconnect.py   # BEOL interconnect
-│   └── data_1 … data_4/                        # 400 pairs each
+├── Fixed/
+│   ├── fixed_noise_data.py
+│   ├── fixed_noise_data_dram.py
+│   ├── fixed_noise_data_finfet6tsram.py
+│   ├── fixed_noise_data_beol_interconnect.py
+│   └── data_1 … data_4/
 │       ├── ref_XXX.png
 │       ├── search_XXX.png
 │       └── gt_XXX.json
 │
-├── driftsense/                                 # Core localization package
-│   ├── config.py                               # DEFAULT_SCALES, DEFAULT_ANGLES,
-│   │                                           # MIN_SCORE, tolerances
-│   ├── io_utils.py                             # iterate_dataset / load helpers
-│   ├── preprocessing.py                        # Optional CLAHE
-│   ├── localize.py                             # Public API: (ref, search) → result dict
+├── driftsense/
+│   ├── config.py
+│   ├── io_utils.py
+│   ├── preprocessing.py
+│   ├── localize.py
 │   └── matching/
-│       ├── template_matcher.py                 # Multi-scale + multi-angle NCC
-│       └── tiebreak.py                         # NMS + score-first /
-│                                               # distance-to-center tie-break
+│       ├── template_matcher.py
+│       └── tiebreak.py
 │
 ├── evaluation/
-│   ├── evaluate.py                             # Full-style evaluation →
-│   │                                           # results.csv + summary.json
-│   ├── metrics.py                              # pixel_error, success@1/3/5 px,
-│   │                                           # summarize
-│   ├── visualize.py                            # Failure overlays +
-│   │                                           # single-sample previews
-│   └── noise_sweep.py                          # Precision-Recall vs noise
-│                                               # (1× / 2.5× / 5× / 10×)
+│   ├── evaluate.py
+│   ├── metrics.py
+│   ├── visualize.py
+│   └── noise_sweep.py
 │
-├── predict.py                                  # Standalone predictor
-│                                               # (hackathon contract)
-├── cli.py                                      # Single entry-point
-│                                               # (evaluate / visualize / show)
-│
-└── results/                                    # Auto-generated CSVs,
-                                                # summaries, PR plots
+├── predict.py
+├── cli.py
+└── results/
+```
+
+
 
 
 ### 3.2 Synthetic Dataset Generation (`Fixed/`)
