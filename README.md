@@ -51,29 +51,44 @@ The repository implements this end-to-end.
 ### 3.1 Repository Layout
 
 semicon_appliedmaterials/
-├── Fixed/                          # Synthetic SEM pair generators + data
-│   ├── fixed_noise_data.py                 # dram_octagonal
-│   ├── fixed_noise_data_dram.py            # dram_6f2
-│   ├── fixed_noise_data_finfet6tsram.py    # finfet_sram
-│   ├── fixed_noise_data_beol_interconnect.py
-│   └── data_1 … data_4/                    # 400 pairs each (ref_XXX.png, search_XXX.png, gt_XXX.json)
-├── driftsense/                     # Core localization package
-│   ├── config.py                   # DEFAULT_SCALES, DEFAULT_ANGLES, MIN_SCORE, tolerances
-│   ├── io_utils.py                 # iterate_dataset / load helpers
-│   ├── preprocessing.py            # optional CLAHE
-│   ├── localize.py                 # public API: (ref, search) → result dict
+├── Fixed/                                      # Synthetic SEM pair generators + data
+│   ├── fixed_noise_data.py                     # dram_octagonal
+│   ├── fixed_noise_data_dram.py                # dram_6f2
+│   ├── fixed_noise_data_finfet6tsram.py        # finfet_sram
+│   ├── fixed_noise_data_beol_interconnect.py   # BEOL interconnect
+│   └── data_1 … data_4/                        # 400 pairs each
+│       ├── ref_XXX.png
+│       ├── search_XXX.png
+│       └── gt_XXX.json
+│
+├── driftsense/                                 # Core localization package
+│   ├── config.py                               # DEFAULT_SCALES, DEFAULT_ANGLES,
+│   │                                           # MIN_SCORE, tolerances
+│   ├── io_utils.py                             # iterate_dataset / load helpers
+│   ├── preprocessing.py                        # Optional CLAHE
+│   ├── localize.py                             # Public API: (ref, search) → result dict
 │   └── matching/
-│       ├── template_matcher.py     # multi-scale + multi-angle NCC
-│       └── tiebreak.py             # NMS + score-first / distance-to-center tie-break
+│       ├── template_matcher.py                 # Multi-scale + multi-angle NCC
+│       └── tiebreak.py                         # NMS + score-first /
+│                                               # distance-to-center tie-break
+│
 ├── evaluation/
-│   ├── evaluate.py                 # full-style evaluation → results.csv + summary.json
-│   ├── metrics.py                  # pixel_error, success@1/3/5 px, summarize
-│   ├── visualize.py                # failure overlays + single-sample previews
-│   └── noise_sweep.py              # Precision-Recall vs noise (1× / 2.5× / 5× / 10×)
-├── predict.py                      # standalone predictor (hackathon contract)
-├── cli.py                          # single entry-point (evaluate / visualize / show)
-└── results/                        # auto-generated CSVs, summaries, PR plots
-
+│   ├── evaluate.py                             # Full-style evaluation →
+│   │                                           # results.csv + summary.json
+│   ├── metrics.py                              # pixel_error, success@1/3/5 px,
+│   │                                           # summarize
+│   ├── visualize.py                            # Failure overlays +
+│   │                                           # single-sample previews
+│   └── noise_sweep.py                          # Precision-Recall vs noise
+│                                               # (1× / 2.5× / 5× / 10×)
+│
+├── predict.py                                  # Standalone predictor
+│                                               # (hackathon contract)
+├── cli.py                                      # Single entry-point
+│                                               # (evaluate / visualize / show)
+│
+└── results/                                    # Auto-generated CSVs,
+                                                # summaries, PR plots
 
 
 ### 3.2 Synthetic Dataset Generation (`Fixed/`)
