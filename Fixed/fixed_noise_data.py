@@ -313,5 +313,5 @@ def generate_dram_sem_dataset(output_dir: str, num_samples: int = 30):
 
 
 if __name__ == "__main__":
-    OUTPUT_PATH = r"./Fixed/data_1"
+    OUTPUT_PATH = r"./data_1"
     generate_dram_sem_dataset(output_dir=OUTPUT_PATH, num_samples=400)

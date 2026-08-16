@@ -322,5 +322,5 @@ def generate_finfet_sem_dataset(output_dir: str, num_samples: int = 30):
 
 
 if __name__ == "__main__":
-    OUTPUT_PATH = r"./Fixed/data_3"
+    OUTPUT_PATH = r"./data_3"
     generate_finfet_sem_dataset(output_dir=OUTPUT_PATH, num_samples=400)
