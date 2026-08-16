@@ -278,9 +278,10 @@ def generate_finfet_sem_dataset(output_dir: str, num_samples: int = 30):
         y1 = int(round(center_y)) - half
         x2 = x1 + jittered_size
         y2 = y1 + jittered_size
-
-        actual_center_x = (x1 + x2) / 2.0
-        actual_center_y = (y1 + y2) / 2.0
+        
+# True geometric center of the patch (removes the 0.5 px floor-division bias)
+        actual_center_x = x1 + (jittered_size - 1) / 2.0
+        actual_center_y = y1 + (jittered_size - 1) / 2.0
 
         # Soft feathered edge -- no hard rectangular seam
         _feather = 4
