@@ -379,3 +379,26 @@ Precision–Recall was evaluated at **1×, 2.5×, 5× and 10× noise**.
 - Clear degradation appears at the **10× (Extreme)** noise level.
 - The optimal decision threshold decreases from approximately **0.75–0.80** at lower noise levels to **0.15–0.30** under extreme noise.
 
+---
+
+## 6. Sources & Citations
+
+### Die-Layout Generation
+
+| Style | Source / Basis |
+|---|---|
+| **DRAM (octagonal / 6F²)** | US 7,349,232 B2, *“6F² DRAM Cell Design with 3F-Pitch Folded Digitline Sense Amplifier”* (Micron) — oblique active-area geometry. [Patent](https://patents.google.com/patent/US7349232B2) |
+| **FinFET SRAM** | US 9,012,287 B2, *“Cell Layout for SRAM FinFET Transistors”* — orthogonal fin/gate cross-point structure. [Patent](https://patents.google.com/patent/US9012287) |
+| **BEOL Interconnect** | imec, *“Semi-damascene interconnects with fully self-aligned vias at 18 nm metal pitch”* — orthogonal M1/M2 with checkerboard self-aligned vias. [imec](https://www.imec-int.com/en/articles/imec-demonstrates-semi-damascene-interconnects-fully-self-aligned-vias-18nm-metal-pitch) |
+
+### SEM Noise Model
+
+1. Timischl et al. (2012), *“A statistical model of signal-noise in scanning electron microscopy,”* **Scanning** — Poisson + Gaussian shot/readout noise model.
+2. Jin et al. (2015), *“Correction of image drift and distortion in a scanning electron microscopy,”* **Journal of Microscopy** — stage drift and line-scan jitter.
+3. Muller et al. (2006), *“Room design for high-performance electron microscopy,”* **Ultramicroscopy** — AC-mains electromagnetic pickup.
+
+### Classical Localization Algorithm
+
+1. **US 6,399,953 B1** — SEM feature matching using the normalized correlation coefficient method.
+2. **US 8,089,612 B2** — position detection using coarse correlation followed by local refinement, supporting the two-stage localization approach used here.
+
