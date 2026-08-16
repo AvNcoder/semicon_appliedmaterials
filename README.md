@@ -402,3 +402,10 @@ Precision–Recall was evaluated at **1×, 2.5×, 5× and 10× noise**.
 1. **US 6,399,953 B1** — SEM feature matching using the normalized correlation coefficient method.
 2. **US 8,089,612 B2** — position detection using coarse correlation followed by local refinement, supporting the two-stage localization approach used here.
 
+
+---
+## 7. License
+
+This project is released under the **MIT License**.
+
+See the [LICENSE](LICENSE) file for the full license text.
