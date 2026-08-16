@@ -356,3 +356,26 @@ python evaluation/noise_sweep.py
 
 ---
 
+## 5. Results
+
+Evaluation was performed on **400 samples per style (1,600 samples total)**.
+
+| Style | Success @ 5 px | Mean Error | Failures | Mean Latency |
+|---|---:|---:|---:|---:|
+| **dram_6f2** | **100.0%** | 0.29 px | 0 | 2.26 s |
+| **finfet_sram** | **96.0%** | 17.34 px | 16 | 2.53 s |
+| **dram_octagonal** | **94.5%** | 24.61 px | 22 | 2.64 s |
+| **beol_interconnect** | **91.5%** | 34.30 px | 34 | 2.22 s |
+
+**Overall:** 95.5% average success across 1,600 samples.
+
+**Latency:** Mean inference time is approximately **2.2–2.6 s/sample**, at the upper edge of the typical 1–2 s SEM alignment budget referenced by the problem statement.
+
+### Noise Robustness
+
+Precision–Recall was evaluated at **1×, 2.5×, 5× and 10× noise**.
+
+- The method remains usable up to **5× noise**.
+- Clear degradation appears at the **10× (Extreme)** noise level.
+- The optimal decision threshold decreases from approximately **0.75–0.80** at lower noise levels to **0.15–0.30** under extreme noise.
+
