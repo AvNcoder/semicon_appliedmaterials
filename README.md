@@ -50,7 +50,6 @@ The repository implements this end-to-end.
 
 ### 3.1 Repository Layout
 
-### 3.1 Repository Layout
 
 ```text
 semicon_appliedmaterials/
