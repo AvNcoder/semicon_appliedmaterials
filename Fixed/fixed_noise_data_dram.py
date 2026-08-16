@@ -287,8 +287,9 @@ def generate_dram_sem_dataset(output_dir: str, num_samples: int = 30):
         x2 = x1 + jittered_size
         y2 = y1 + jittered_size
 
-        actual_center_x = (x1 + x2) / 2.0
-        actual_center_y = (y1 + y2) / 2.0
+# True geometric center of the patch (removes the 0.5 px floor-division bias)
+        actual_center_x = x1 + (jittered_size - 1) / 2.0
+        actual_center_y = y1 + (jittered_size - 1) / 2.0
 
         # 5. Embed patch into Wide Search canvas
         clean_search_canvas[y1:y2, x1:x2] = clean_ref_100
