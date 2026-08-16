@@ -328,5 +328,5 @@ def generate_beol_sem_dataset(output_dir: str, num_samples: int = 30):
 
 
 if __name__ == "__main__":
-    OUTPUT_PATH = r"./Fixed/data_4"
+    OUTPUT_PATH = r"./data_4"
     generate_beol_sem_dataset(output_dir=OUTPUT_PATH, num_samples=400)
