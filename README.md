@@ -115,20 +115,19 @@ Four styles are generated (400 pairs each):
 ### 3.3 Localization Algorithm (`driftsense/`)
 
 1. **Multi-scale + multi-angle NCC** (`template_matcher.py`)  
-   The reference is resized across `DEFAULT_SCALES` (covers the ±20 % generator jitter) and rotated across `DEFAULT_ANGLES` (±3°). At each pose, normalized cross-correlation (`cv2.TM_CCOEFF_NORMED`) is computed.
+   The reference is resized across `DEFAULT_SCALES` and rotated across `DEFAULT_ANGLES` (±3°). At each pose, normalized cross-correlation (`cv2.TM_CCOEFF_NORMED`) is computed. **Up to 5 local peaks** are retained from each correlation surface rather than only the global maximum. This preserves plausible matches in highly periodic DRAM/FinFET layouts where a neighboring cell can score slightly higher than the true location. :contentReference[oaicite:0]{index=0}
 
 2. **Center conversion**  
-   `cv2.minMaxLoc` returns the top-left of the best window; we convert to center coordinates (`+ w/2, + h/2`) so the reported `(x, y)` matches the ground-truth convention.
+   Each correlation peak is converted from its top-left template position to the **center `(x, y)`** of the matched patch (`+ w/2, + h/2`), matching the ground-truth convention. :contentReference[oaicite:1]{index=1}
 
-3. **Non-maximum suppression** (`tiebreak.py`)  
-   Nearby peaks that belong to the same physical location are collapsed.
+3. **NMS / duplicate suppression** (`tiebreak.py`)  
+   Spatially overlapping candidates from different scales are suppressed, keeping the highest-scoring candidate for each physical location. :contentReference[oaicite:2]{index=2}
 
 4. **Score-first, distance-to-center tie-break**  
-   Primary key = correlation score.  
-   When scores are nearly equal, the candidate closest to the geometric center of the search image is chosen (exactly the rule stated in the problem brief).
+   Candidates are ranked primarily by correlation score. If multiple candidates are within the configured score tolerance, the candidate closest to the search-image center is selected. :contentReference[oaicite:3]{index=3}
 
 5. **Confidence gate**  
-   A match is accepted only if `score ≥ MIN_SCORE` (default 0.35, later justified by the PR-vs-noise sweep).
+   A match is accepted only if its final correlation score satisfies `MIN_SCORE`.
 
 The public entry point is:
 
@@ -138,44 +137,54 @@ result = localize(ref, search)
 # result = {x, y, scale, angle, score, matched, time_ms, …}
 ```
 
+
+The important technical correction is that **`cv2.minMaxLoc` is still used internally**, but only repeatedly on a temporarily suppressed correlation surface to extract multiple peaks. So don't describe it as being completely removed. :contentReference[oaicite:4]{index=4}
+
+---
+
+
 ### 3.4 Evaluation & Metrics (`evaluation/`)
 
-- `cli.py evaluate` / `evaluate.py` runs the localizer over every sample of a style and writes:
-  - `results/<style>/results.csv` – per-sample predictions, error, score, latency
-  - `results/<style>/summary.json` – aggregate statistics + `failure_sample_ids`
-  - `results/overall_summary.json`
-- Success is defined at the tolerances required by the brief (1 px / 3 px / 5 px).
-- A sample is counted as a **failure** when it is unmatched **or** its error exceeds 5 px.
-- Live progress (percent, elapsed, ETA, last inference time) is printed while evaluating.
+- `cli.py evaluate` / `evaluate.py` runs the localizer over every sample and writes:
+  - `results/<style>/results.csv` — per-sample predictions, error, score and latency
+  - `results/<style>/summary.json` — aggregate metrics + failure IDs
+  - `results/overall_summary.json` — combined results
+- Success is measured at **1 px / 3 px / 5 px**.
+- A sample is a failure when it is unmatched or its error exceeds **5 px**.
+- The evaluation reports live progress, elapsed time, ETA and inference time. :contentReference[oaicite:5]{index=5}
 
-**Measured performance on the full 400-sample sets**
+**Measured performance on 400 samples per style**
 
-| Style                | Success @ 5 px | Mean Error | Failures | Mean Latency |
-|----------------------|----------------|------------|----------|--------------|
-| dram_6f2             | **100.0 %**    | 0.29 px    | 0        | ~2.3–2.5 s   |
-| finfet_sram          | **96.0 %**     | 17.34 px   | 16       | ~2.4–2.5 s   |
-| dram_octagonal       | **94.5 %**     | 24.61 px   | 22       | ~1.3–2.6 s   |
-| beol_interconnect    | **91.5 %**     | 34.30 px   | 34       | ~2.2–2.3 s   |
+| Style | Success @ 5 px | Mean Error | Failures | Mean Latency |
+|---|---:|---:|---:|---:|
+| **dram_6f2** | **100.0%** | 0.29 px | 0 | 2.26 s |
+| **finfet_sram** | **96.0%** | 17.34 px | 16 | 2.53 s |
+| **dram_octagonal** | **94.5%** | 24.61 px | 22 | 2.64 s |
+| **beol_interconnect** | **91.5%** | 34.30 px | 34 | 2.22 s |
 
-Average success across all 1 600 images ≈ **95.5 %**.  
-Computation time on a single 1000×1000 pair is reported as required by the problem statement.
+**Overall:** 95.5% average success across **1,600 samples**.
+
+
+
 
 ### 3.5 Noise-Robustness Analysis (`noise_sweep.py`)
 
-Following the PPT instruction “Sweep, don’t guess”:
+Following the PPT instruction **“Sweep, don't guess”**:
 
-- The **same geometry** is regenerated at four noise multipliers (1×, 2.5×, 5×, 10×).
-- Precision–Recall curves are traced by sweeping the match-score threshold.
-- Best-F1 thresholds and the usable operating region are recorded.
+- The **same geometry** is regenerated at four noise multipliers: **1×, 2.5×, 5× and 10×**.
+- Precision–Recall curves are obtained by sweeping the match-score threshold.
+- The best-F1 threshold and usable operating region are recorded. :contentReference[oaicite:7]{index=7}
 
-| Style                | Low (1×)     | Medium (2.5×) | High (5×)    | Extreme (10×) |
-|----------------------|--------------|---------------|--------------|---------------|
-| dram_octagonal       | 0.902 @ 0.75 | 0.891 @ 0.40  | 0.893 @ 0.25 | 0.844 @ 0.15  |
-| dram_6f2             | 0.984 @ 0.80 | 0.945 @ 0.65  | 0.789 @ 0.45 | 0.716 @ 0.30  |
-| finfet_sram          | 0.909 @ 0.80 | 0.800 @ 0.55  | 0.758 @ 0.35 | 0.641 @ 0.20  |
-| beol_interconnect    | 0.837 @ 0.75 | 0.866 @ 0.35  | 0.958 @ 0.25 | 0.873 @ 0.15  |
+| Style | Low (1×) | Medium (2.5×) | High (5×) | Extreme (10×) |
+|---|---:|---:|---:|---:|
+| dram_octagonal | 0.902 @ 0.75 | 0.891 @ 0.40 | 0.893 @ 0.25 | 0.844 @ 0.15 |
+| dram_6f2 | 0.984 @ 0.80 | 0.945 @ 0.65 | 0.789 @ 0.45 | 0.716 @ 0.30 |
+| finfet_sram | 0.909 @ 0.80 | 0.800 @ 0.55 | 0.758 @ 0.35 | 0.641 @ 0.20 |
+| beol_interconnect | 0.837 @ 0.75 | 0.866 @ 0.35 | 0.958 @ 0.25 | 0.873 @ 0.15 |
 
-The method stays usable up to 5× noise; clear degradation appears only at the Extreme (10×) tier. This supplies the evidence-based threshold justification required by the brief.
+The method remains usable up to **5× noise**, with clear degradation at the **10× Extreme** level.
+
+
 
 ### 3.6 Standalone Predictor (`predict.py`)
 
