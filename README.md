@@ -6,7 +6,7 @@ SEMICON India Hackathon 2026 – Applied Materials Problem Statement
 
 ## 1. Problem Description
 
-In semiconductor manufacturing, SEM (Scanning Electron Microscope) inspection tools must repeatedly locate a known high-magnification reference pattern inside a wider, noisier, lower-magnification field of view. Stage drift, vibration and thermal effects cause the tool to land slightly off-target. 
+In semiconductor manufacturing, SEM (Scanning Electron Microscope) inspection tools must repeatedly locate a known high-magnification reference pattern inside a wider, noisier, lower-magnification field of view. Stage drift, vibration and thermal effects cause the tool to land slightly off-target.
 
 **Drift-Sense** solves this “needle in a nanoscale haystack” problem:
 
@@ -14,6 +14,7 @@ In semiconductor manufacturing, SEM (Scanning Electron Microscope) inspection to
 - **Output**: the exact center coordinates `(x, y)` of the reference pattern inside the search image
 
 The system includes:
+
 1. A physics-informed synthetic SEM dataset generator (DRAM-style and FinFET-style layouts)
 2. A classical multi-scale / multi-angle Normalized Cross-Correlation (NCC) localizer
 3. Full evaluation, visualization and noise-robustness analysis pipelines
@@ -23,6 +24,7 @@ The system includes:
 ## 2. System Requirements & Installation
 
 ### Requirements
+
 - Python 3.10+
 - OS: Windows / Linux / macOS
 - See [`requirements.txt`](requirements.txt) for the full package list  
@@ -36,9 +38,7 @@ cd semicon_appliedmaterials
 pip install -r requirements.txt
 ```
 
-
 ---
-
 
 ## 3. How the System Works
 
@@ -50,15 +50,14 @@ The repository implements this end-to-end.
 
 ### 3.1 Repository Layout
 
-
 ```text
 semicon_appliedmaterials/
 ├── Fixed/
-│   ├── fixed_noise_data.py
-│   ├── fixed_noise_data_dram.py
-│   ├── fixed_noise_data_finfet6tsram.py
+│   ├── fixed_noise_data.py                 # dram_octagonal
+│   ├── fixed_noise_data_dram.py            # dram_6f2
+│   ├── fixed_noise_data_finfet6tsram.py    # finfet_sram
 │   ├── fixed_noise_data_beol_interconnect.py
-│   └── data_1 … data_4/
+│   └── data_1 … data_4/                    # 400 pairs each
 │       ├── ref_XXX.png
 │       ├── search_XXX.png
 │       └── gt_XXX.json
@@ -83,16 +82,13 @@ semicon_appliedmaterials/
 └── results/
 ```
 
-
-
-
 ### 3.2 Synthetic Dataset Generation (`Fixed/`)
 
 Each generator builds a realistic periodic die layout (DRAM-style or FinFET-style), embeds a unique high-mag patch, and applies a physics-informed SEM noise stack:
 
-- **10× zoom ratio** – the reference is captured at higher magnification and appears shrunk inside the wide-search image (exactly as required by the problem statement).
-- **Geometric jitter** – rotation ±3° and scale ±20 % applied to the embedded patch (PPT requirement).
-- **Unique local features** – wire breaks, alignment pads and interconnect lines so that only one location is a true match (avoids pure periodic ambiguity).
+- **10× zoom ratio** – the reference appears shrunk inside the wide-search image (as required by the problem statement).
+- **Geometric jitter** – rotation ±3° and scale ±20 % applied to the embedded patch.
+- **Unique local features** – wire breaks, alignment pads and interconnect lines so that only one location is a true match.
 - **Noise primitives** (independent on reference vs search):
   - Poisson–Gaussian (shot + readout)
   - Edge brightening (SE edge effect)
@@ -105,75 +101,61 @@ Each generator builds a realistic periodic die layout (DRAM-style or FinFET-styl
 
 Four styles are generated (400 pairs each):
 
-| Style                | Folder   | Character |
-|----------------------|----------|-----------|
-| dram_octagonal       | data_1   | Orthogonal word-line / bit-line DRAM |
-| dram_6f2             | data_2   | 6F² oblique active-moat DRAM |
-| finfet_sram          | data_3   | Parallel fins + gate bars |
-| beol_interconnect    | data_4   | Dual-layer M1/M2 + self-aligned vias |
+| Style | Folder | Character |
+|---|---|---|
+| dram_octagonal | data_1 | Orthogonal word-line / bit-line DRAM |
+| dram_6f2 | data_2 | 6F² oblique active-moat DRAM |
+| finfet_sram | data_3 | Parallel fins + gate bars |
+| beol_interconnect | data_4 | Dual-layer M1/M2 + self-aligned vias |
 
 ### 3.3 Localization Algorithm (`driftsense/`)
 
 1. **Multi-scale + multi-angle NCC** (`template_matcher.py`)  
-   The reference is resized across `DEFAULT_SCALES` and rotated across `DEFAULT_ANGLES` (±3°). At each pose, normalized cross-correlation (`cv2.TM_CCOEFF_NORMED`) is computed. **Up to 5 local peaks** are retained from each correlation surface rather than only the global maximum. This preserves plausible matches in highly periodic DRAM/FinFET layouts where a neighboring cell can score slightly higher than the true location. :contentReference[oaicite:0]{index=0}
+   The reference is resized across `DEFAULT_SCALES` (covers ±20 % generator jitter) and rotated across `DEFAULT_ANGLES` (±3°).  
+   At each pose, normalized cross-correlation (`cv2.TM_CCOEFF_NORMED`) is computed.  
+   **Up to 5 local peaks** are extracted from each correlation surface, rather than keeping only the single global maximum. This prevents the true match from being discarded when a neighboring period of a highly periodic layout scores slightly higher.
 
 2. **Center conversion**  
-   Each correlation peak is converted from its top-left template position to the **center `(x, y)`** of the matched patch (`+ w/2, + h/2`), matching the ground-truth convention. :contentReference[oaicite:1]{index=1}
+   Each correlation peak is converted from the template's top-left position to center coordinates (`+ w/2, + h/2`).
 
-3. **NMS / duplicate suppression** (`tiebreak.py`)  
-   Spatially overlapping candidates from different scales are suppressed, keeping the highest-scoring candidate for each physical location. :contentReference[oaicite:2]{index=2}
+3. **Non-maximum suppression** (`tiebreak.py`)  
+   Nearby peaks belonging to the same physical location are collapsed.
 
 4. **Score-first, distance-to-center tie-break**  
-   Candidates are ranked primarily by correlation score. If multiple candidates are within the configured score tolerance, the candidate closest to the search-image center is selected. :contentReference[oaicite:3]{index=3}
+   Primary key = correlation score.  
+   When scores are nearly equal, the candidate closest to the geometric center of the search image is chosen (exactly the rule stated in the problem brief).
 
 5. **Confidence gate**  
-   A match is accepted only if its final correlation score satisfies `MIN_SCORE`.
-
-The public entry point is:
-
-```python
-from driftsense.localize import localize
-result = localize(ref, search)
-# result = {x, y, scale, angle, score, matched, time_ms, …}
-```
-
-
-The important technical correction is that **`cv2.minMaxLoc` is still used internally**, but only repeatedly on a temporarily suppressed correlation surface to extract multiple peaks. So don't describe it as being completely removed. :contentReference[oaicite:4]{index=4}
-
----
-
+   A match is accepted only if `score ≥ MIN_SCORE` (default 0.35, justified by the PR-vs-noise sweep).
 
 ### 3.4 Evaluation & Metrics (`evaluation/`)
 
-- `cli.py evaluate` / `evaluate.py` runs the localizer over every sample and writes:
-  - `results/<style>/results.csv` — per-sample predictions, error, score and latency
-  - `results/<style>/summary.json` — aggregate metrics + failure IDs
-  - `results/overall_summary.json` — combined results
-- Success is measured at **1 px / 3 px / 5 px**.
-- A sample is a failure when it is unmatched or its error exceeds **5 px**.
-- The evaluation reports live progress, elapsed time, ETA and inference time. :contentReference[oaicite:5]{index=5}
+- `cli.py evaluate` / `evaluate.py` runs the localizer over every sample of a style and writes:
+  - `results/<style>/results.csv` – per-sample predictions, error, score, latency
+  - `results/<style>/summary.json` – aggregate statistics + `failure_sample_ids`
+  - `results/overall_summary.json`
+- Success is defined at the tolerances required by the brief (1 px / 3 px / 5 px).
+- A sample is counted as a **failure** when it is unmatched **or** its error exceeds 5 px.
 
-**Measured performance on 400 samples per style**
+**Measured performance on the full 400-sample sets**
 
 | Style | Success @ 5 px | Mean Error | Failures | Mean Latency |
 |---|---:|---:|---:|---:|
-| **dram_6f2** | **100.0%** | 0.29 px | 0 | 2.26 s |
-| **finfet_sram** | **96.0%** | 17.34 px | 16 | 2.53 s |
-| **dram_octagonal** | **94.5%** | 24.61 px | 22 | 2.64 s |
-| **beol_interconnect** | **91.5%** | 34.30 px | 34 | 2.22 s |
+| dram_6f2 | **100.0 %** | 0.66 px | 0 | 2.29 s |
+| finfet_sram | **92.2 %** | 25.64 px | 31 | 2.70 s |
+| dram_octagonal | **89.5 %** | 40.36 px | 42 | 2.17 s |
+| beol_interconnect | **87.5 %** | 43.46 px | 50 | 2.22 s |
 
-**Overall:** 95.5% average success across **1,600 samples**.
-
-
-
+Average success across all 1 600 images ≈ **92.3 %**.  
+Computation time on a single 1000×1000 pair is reported as required by the problem statement.
 
 ### 3.5 Noise-Robustness Analysis (`noise_sweep.py`)
 
-Following the PPT instruction **“Sweep, don't guess”**:
+Following the PPT instruction **“Sweep, don’t guess”**:
 
 - The **same geometry** is regenerated at four noise multipliers: **1×, 2.5×, 5× and 10×**.
 - Precision–Recall curves are obtained by sweeping the match-score threshold.
-- The best-F1 threshold and usable operating region are recorded. :contentReference[oaicite:7]{index=7}
+- The best-F1 threshold and usable operating region are recorded.
 
 | Style | Low (1×) | Medium (2.5×) | High (5×) | Extreme (10×) |
 |---|---:|---:|---:|---:|
@@ -184,8 +166,6 @@ Following the PPT instruction **“Sweep, don't guess”**:
 
 The method remains usable up to **5× noise**, with clear degradation at the **10× Extreme** level.
 
-
-
 ### 3.6 Standalone Predictor (`predict.py`)
 
 Implements the exact hackathon contract:
@@ -194,12 +174,9 @@ Implements the exact hackathon contract:
 python predict.py --search path/to/search.png --reference path/to/ref.png
 ```
 
+Returns `pred_x`, `pred_y`, `score`, `matched` and `time_ms` for any 1000×1000 pair with no dependency on the synthetic data folders.
 
 ---
-
-
-
-
 
 ## 4. Commands
 
@@ -207,7 +184,7 @@ Run all commands from the repository root:
 
 ```bash
 cd semicon_appliedmaterials
-````
+```
 
 ### Generate datasets
 
@@ -360,24 +337,21 @@ python evaluation/confusion_matrix.py
 python evaluation/noise_sweep.py
 ```
 
-
-
 ---
 
 ## 5. Results
 
-Evaluation was performed on **400 samples per style (1,600 samples total)**.
+Evaluation was performed on **400 samples per style (1 600 samples total)**.
 
 | Style | Success @ 5 px | Mean Error | Failures | Mean Latency |
 |---|---:|---:|---:|---:|
-| **dram_6f2** | **100.0%** | 0.29 px | 0 | 2.26 s |
-| **finfet_sram** | **96.0%** | 17.34 px | 16 | 2.53 s |
-| **dram_octagonal** | **94.5%** | 24.61 px | 22 | 2.64 s |
-| **beol_interconnect** | **91.5%** | 34.30 px | 34 | 2.22 s |
+| **dram_6f2** | **100.0 %** | 0.66 px | 0 | 2.29 s |
+| **finfet_sram** | **92.2 %** | 25.64 px | 31 | 2.70 s |
+| **dram_octagonal** | **89.5 %** | 40.36 px | 42 | 2.17 s |
+| **beol_interconnect** | **87.5 %** | 43.46 px | 50 | 2.22 s |
 
-**Overall:** 95.5% average success across 1,600 samples.
-
-**Latency:** Mean inference time is approximately **2.2–2.6 s/sample**, at the upper edge of the typical 1–2 s SEM alignment budget referenced by the problem statement.
+**Overall:** ≈ 92.3 % average success across 1 600 samples.  
+**Latency:** Mean inference time ≈ 2.2–2.7 s per pair (reported as required by the problem statement).
 
 ### Noise Robustness
 
@@ -385,7 +359,7 @@ Precision–Recall was evaluated at **1×, 2.5×, 5× and 10× noise**.
 
 - The method remains usable up to **5× noise**.
 - Clear degradation appears at the **10× (Extreme)** noise level.
-- The optimal decision threshold decreases from approximately **0.75–0.80** at lower noise levels to **0.15–0.30** under extreme noise.
+- The optimal decision threshold decreases from approximately **0.75–0.80** at lower noise to **0.15–0.30** under extreme noise.
 
 ---
 
@@ -395,25 +369,24 @@ Precision–Recall was evaluated at **1×, 2.5×, 5× and 10× noise**.
 
 | Style | Source / Basis |
 |---|---|
-| **DRAM (octagonal / 6F²)** | US 7,349,232 B2, *“6F² DRAM Cell Design with 3F-Pitch Folded Digitline Sense Amplifier”* (Micron) — oblique active-area geometry. [Patent](https://patents.google.com/patent/US7349232B2) |
-| **FinFET SRAM** | US 9,012,287 B2, *“Cell Layout for SRAM FinFET Transistors”* — orthogonal fin/gate cross-point structure. [Patent](https://patents.google.com/patent/US9012287) |
-| **BEOL Interconnect** | imec, *“Semi-damascene interconnects with fully self-aligned vias at 18 nm metal pitch”* — orthogonal M1/M2 with checkerboard self-aligned vias. [imec](https://www.imec-int.com/en/articles/imec-demonstrates-semi-damascene-interconnects-fully-self-aligned-vias-18nm-metal-pitch) |
+| **DRAM (octagonal / 6F²)** | US 7,349,232 B2 – “6F² DRAM Cell Design with 3F-Pitch Folded Digitline Sense Amplifier” (Micron). https://patents.google.com/patent/US7349232B2 |
+| **FinFET SRAM** | US 9,012,287 B2 – “Cell Layout for SRAM FinFET Transistors”. https://patents.google.com/patent/US9012287 |
+| **BEOL Interconnect** | imec – “Semi-damascene interconnects with fully self-aligned vias at 18 nm metal pitch”. https://www.imec-int.com/en/articles/imec-demonstrates-semi-damascene-interconnects-fully-self-aligned-vias-18nm-metal-pitch |
 
 ### SEM Noise Model
 
-1. Timischl et al. (2012), *“A statistical model of signal-noise in scanning electron microscopy,”* **Scanning** — Poisson + Gaussian shot/readout noise model.
-2. Jin et al. (2015), *“Correction of image drift and distortion in a scanning electron microscopy,”* **Journal of Microscopy** — stage drift and line-scan jitter.
-3. Muller et al. (2006), *“Room design for high-performance electron microscopy,”* **Ultramicroscopy** — AC-mains electromagnetic pickup.
+1. Timischl et al. (2012) – “A statistical model of signal-noise in scanning electron microscopy,” *Scanning* – Poisson + Gaussian shot/readout model.
+2. Jin et al. (2015) – “Correction of image drift and distortion in a scanning electron microscopy,” *Journal of Microscopy* – stage drift and line-scan jitter.
+3. Muller et al. (2006) – “Room design for high-performance electron microscopy,” *Ultramicroscopy* – AC-mains electromagnetic pickup.
 
 ### Classical Localization Algorithm
 
-1. **US 6,399,953 B1** — SEM feature matching using the normalized correlation coefficient method.
-2. **US 8,089,612 B2** — position detection using coarse correlation followed by local refinement, supporting the two-stage localization approach used here.
-
+1. US 6,399,953 B1 – SEM feature matching using the normalized correlation coefficient method.
+2. US 8,089,612 B2 – position detection using coarse correlation followed by local refinement.
 
 ---
+
 ## 7. License
 
-This project is released under the **MIT License**.
-
+This project is released under the **MIT License**.  
 See the [LICENSE](LICENSE) file for the full license text.
