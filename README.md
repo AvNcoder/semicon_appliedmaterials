@@ -1,4 +1,4 @@
-````markdown
+
 # Drift-Sense
 **AI-Powered Navigation-Error Recovery for Wafer Inspection Tools**  
 SEMICON India Hackathon 2026 – Applied Materials Problem Statement
@@ -38,8 +38,8 @@ The system includes:
 git clone https://github.com/AvNcoder/semicon_appliedmaterials.git
 cd semicon_appliedmaterials
 pip install -r requirements.txt
-````
 
+```
 ---
 
 ## 3. How the System Works
