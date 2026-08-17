@@ -1,8 +1,7 @@
+````markdown
 # Drift-Sense
 **AI-Powered Navigation-Error Recovery for Wafer Inspection Tools**  
 SEMICON India Hackathon 2026 – Applied Materials Problem Statement
-
----
 
 Repository: https://github.com/AvNcoder/semicon_appliedmaterials
 
@@ -39,7 +38,7 @@ The system includes:
 git clone https://github.com/AvNcoder/semicon_appliedmaterials.git
 cd semicon_appliedmaterials
 pip install -r requirements.txt
-```
+````
 
 ---
 
@@ -92,83 +91,85 @@ semicon_appliedmaterials/
 
 Each generator builds a realistic periodic die layout (DRAM-style or FinFET-style), embeds a unique high-mag patch, and applies a physics-informed SEM noise stack:
 
-- **10× zoom ratio** – the reference appears shrunk inside the wide-search image (as required by the problem statement).
-- **Geometric jitter** – rotation ±3° and scale ±20 % applied to the embedded patch.
-- **Unique local features** – wire breaks, alignment pads and interconnect lines so that only one location is a true match.
-- **Noise primitives** (independent on reference vs search):
-  - Poisson–Gaussian (shot + readout)
-  - Edge brightening (SE edge effect)
-  - Astigmatism blur
-  - Line-scan jitter
-  - Stage drift
-  - Charging & streaks
-  - AC-mains ripple
-  - Hydrocarbon deposition
+* **10× zoom ratio** – the reference appears shrunk inside the wide-search image (as required by the problem statement).
+* **Geometric jitter** – rotation ±3° and scale ±20 % applied to the embedded patch.
+* **Unique local features** – wire breaks, alignment pads and interconnect lines so that only one location is a true match.
+* **Noise primitives** (independent on reference vs search):
+
+  * Poisson–Gaussian (shot + readout)
+  * Edge brightening (SE edge effect)
+  * Astigmatism blur
+  * Line-scan jitter
+  * Stage drift
+  * Charging & streaks
+  * AC-mains ripple
+  * Hydrocarbon deposition
 
 Four styles are generated (400 pairs each):
 
-| Style                | Folder   | Character                              |
-|----------------------|----------|----------------------------------------|
-| dram_octagonal       | data_1   | Orthogonal word-line / bit-line DRAM   |
-| dram_6f2             | data_2   | 6F² oblique active-moat DRAM           |
-| finfet_sram          | data_3   | Parallel fins + gate bars              |
-| beol_interconnect    | data_4   | Dual-layer M1/M2 + self-aligned vias   |
+| Style             | Folder | Character                            |
+| ----------------- | ------ | ------------------------------------ |
+| dram_octagonal    | data_1 | Orthogonal word-line / bit-line DRAM |
+| dram_6f2          | data_2 | 6F² oblique active-moat DRAM         |
+| finfet_sram       | data_3 | Parallel fins + gate bars            |
+| beol_interconnect | data_4 | Dual-layer M1/M2 + self-aligned vias |
 
 ### 3.3 Localization Algorithm (`driftsense/`)
 
-1. **Multi-scale + multi-angle NCC** (`template_matcher.py`)  
-   The reference is resized across `DEFAULT_SCALES` (covers ±20 % generator jitter) and rotated across `DEFAULT_ANGLES` (±3°).  
-   At each pose, normalized cross-correlation (`cv2.TM_CCOEFF_NORMED`) is computed.  
+1. **Multi-scale + multi-angle NCC** (`template_matcher.py`)
+   The reference is resized across `DEFAULT_SCALES` (covers ±20 % generator jitter) and rotated across `DEFAULT_ANGLES` (±3°).
+   At each pose, normalized cross-correlation (`cv2.TM_CCOEFF_NORMED`) is computed.
    **Up to 5 local peaks** are extracted from each correlation surface, rather than keeping only the single global maximum. This prevents the true match from being discarded when a neighboring period of a highly periodic layout scores slightly higher.
 
-2. **Center conversion**  
+2. **Center conversion**
    Each correlation peak is converted from the template's top-left position to center coordinates (`+ w/2, + h/2`).
 
-3. **Non-maximum suppression** (`tiebreak.py`)  
+3. **Non-maximum suppression** (`tiebreak.py`)
    Nearby peaks belonging to the same physical location are collapsed.
 
-4. **Score-first, distance-to-center tie-break**  
-   Primary key = correlation score.  
+4. **Score-first, distance-to-center tie-break**
+   Primary key = correlation score.
    When scores are nearly equal, the candidate closest to the geometric center of the search image is chosen (exactly the rule stated in the problem brief).
 
-5. **Confidence gate**  
+5. **Confidence gate**
    A match is accepted only if `score ≥ MIN_SCORE` (default 0.35, justified by the PR-vs-noise sweep).
 
 ### 3.4 Evaluation & Metrics (`evaluation/`)
 
-- `cli.py evaluate` / `evaluate.py` runs the localizer over every sample of a style and writes:
-  - `results/<style>/results.csv` – per-sample predictions, error, score, latency
-  - `results/<style>/summary.json` – aggregate statistics + `failure_sample_ids`
-  - `results/overall_summary.json`
-- Success is defined at the tolerances required by the brief (1 px / 3 px / 5 px).
-- A sample is counted as a **failure** when it is unmatched **or** its error exceeds 5 px.
+* `cli.py evaluate` / `evaluate.py` runs the localizer over every sample of a style and writes:
+
+  * `results/<style>/results.csv` – per-sample predictions, error, score, latency
+  * `results/<style>/summary.json` – aggregate statistics + `failure_sample_ids`
+  * `results/overall_summary.json`
+* Success is defined at the tolerances required by the brief (1 px / 3 px / 5 px).
+* A sample is counted as a **failure** when it is unmatched **or** its error exceeds 5 px.
 
 **Measured performance on the full 400-sample sets**
 
-| Style                | Success @ 5 px | Mean Error | Failures | Mean Latency |
-|----------------------|----------------|------------|----------|--------------|
-| dram_6f2             | **100.0 %**    | 0.66 px    | 0        | 2.29 s       |
-| finfet_sram          | **92.2 %**     | 25.64 px   | 31       | 2.70 s       |
-| dram_octagonal       | **89.5 %**     | 40.36 px   | 42       | 2.17 s       |
-| beol_interconnect    | **87.5 %**     | 43.46 px   | 50       | 2.22 s       |
+| Style             | Success @ 5 px | Mean Error | Failures | Mean Latency |
+| ----------------- | -------------- | ---------- | -------- | ------------ |
+| dram_6f2          | **100.0 %**    | 0.66 px    | 0        | 2.29 s       |
+| finfet_sram       | **92.2 %**     | 25.64 px   | 31       | 2.70 s       |
+| dram_octagonal    | **89.5 %**     | 40.36 px   | 42       | 2.17 s       |
+| beol_interconnect | **87.5 %**     | 43.46 px   | 50       | 2.22 s       |
 
-Average success across all 1 600 images ≈ **92.3 %**.  
+Average success across all 1 600 images ≈ **92.3 %**.
 Computation time on a single 1000×1000 pair is reported as required by the problem statement.
 
 ### 3.5 Noise-Robustness Analysis (`noise_sweep.py`)
 
 Following the PPT instruction **“Sweep, don’t guess”**:
 
-- The **same geometry** is regenerated at four noise multipliers: **1×, 2.5×, 5× and 10×**.
-- Precision–Recall curves are obtained by sweeping the match-score threshold.
-- The best-F1 threshold and usable operating region are recorded.
+* The **same geometry** is regenerated at four noise multipliers: **1×, 2.5×, 5× and 10×**.
+* Precision–Recall curves are obtained by sweeping the match-score threshold.
+* The best-F1 threshold and usable operating region are recorded.
 
-| Style                | Low (1×)     | Medium (2.5×) | High (5×)    | Extreme (10×) |
-|----------------------|--------------|---------------|--------------|---------------|
-| dram_octagonal       | 0.902 @ 0.75 | 0.891 @ 0.40  | 0.893 @ 0.25 | 0.844 @ 0.15  |
-| dram_6f2             | 0.984 @ 0.80 | 0.945 @ 0.65  | 0.789 @ 0.45 | 0.716 @ 0.30  |
-| finfet_sram          | 0.909 @ 0.80 | 0.800 @ 0.55  | 0.758 @ 0.35 | 0.641 @ 0.20  |
-| beol_interconnect    | 0.837 @ 0.75 | 0.866 @ 0.35  | 0.958 @ 0.25 | 0.873 @ 0.15  |
+| Style             | Low (1×)     | Medium (2.5×) | High (5×)    | Extreme (10×) |
+| ----------------- | ------------ | ------------- | ------------ | ------------- |
+| dram_octagonal    | 0.855 @ 0.75 | 0.893 @ 0.45  | 0.894 @ 0.20 | 0.844 @ 0.10  |
+| dram_6f2          | 0.984 @ 0.80 | 0.945 @ 0.65  | 0.803 @ 0.45 | 0.667 @ 0.30  |
+| finfet_sram       | 0.891 @ 0.80 | 0.797 @ 0.55  | 0.729 @ 0.35 | 0.585 @ 0.20  |
+| beol_interconnect | 0.828 @ 0.75 | 0.864 @ 0.35  | 0.966 @ 0.25 | 0.881 @ 0.15  |
 
 The method remains usable up to **5× noise**, with clear degradation at the **10× Extreme** level.
 
@@ -267,23 +268,30 @@ python evaluation/noise_sweep.py
 
 Evaluation was performed on **400 samples per style (1 600 samples total)**.
 
-| Style                  | Success @ 5 px | Mean Error | Failures | Mean Latency |
-|------------------------|----------------|------------|----------|--------------|
-| **dram_6f2**           | **100.0 %**    | 0.66 px    | 0        | 2.29 s       |
-| **finfet_sram**        | **92.2 %**     | 25.64 px   | 31       | 2.70 s       |
-| **dram_octagonal**     | **89.5 %**     | 40.36 px   | 42       | 2.17 s       |
-| **beol_interconnect**  | **87.5 %**     | 43.46 px   | 50       | 2.22 s       |
+| Style                 | Success @ 5 px | Mean Error | Failures | Mean Latency |
+| --------------------- | -------------- | ---------- | -------- | ------------ |
+| **dram_6f2**          | **100.0 %**    | 0.66 px    | 0        | 2.29 s       |
+| **finfet_sram**       | **92.2 %**     | 25.64 px   | 31       | 2.70 s       |
+| **dram_octagonal**    | **89.5 %**     | 40.36 px   | 42       | 2.17 s       |
+| **beol_interconnect** | **87.5 %**     | 43.46 px   | 50       | 2.22 s       |
 
-**Overall:** ≈ 92.3 % average success across 1 600 samples.  
+**Overall:** ≈ 92.3 % average success across 1 600 samples.
 **Latency:** Mean inference time ≈ 2.2–2.7 s per pair (reported as required by the problem statement).
 
 ### Noise Robustness
 
 Precision–Recall was evaluated at **1×, 2.5×, 5× and 10× noise**.
 
-- The method remains usable up to **5× noise**.
-- Clear degradation appears at the **10× (Extreme)** noise level.
-- The optimal decision threshold decreases from approximately **0.75–0.80** at lower noise to **0.15–0.30** under extreme noise.
+| Style             | Low (1×)     | Medium (2.5×) | High (5×)    | Extreme (10×) |
+| ----------------- | ------------ | ------------- | ------------ | ------------- |
+| dram_octagonal    | 0.855 @ 0.75 | 0.893 @ 0.45  | 0.894 @ 0.20 | 0.844 @ 0.10  |
+| dram_6f2          | 0.984 @ 0.80 | 0.945 @ 0.65  | 0.803 @ 0.45 | 0.667 @ 0.30  |
+| finfet_sram       | 0.891 @ 0.80 | 0.797 @ 0.55  | 0.729 @ 0.35 | 0.585 @ 0.20  |
+| beol_interconnect | 0.828 @ 0.75 | 0.864 @ 0.35  | 0.966 @ 0.25 | 0.881 @ 0.15  |
+
+* The method remains usable up to **5× noise**.
+* Clear degradation appears at the **10× (Extreme)** noise level.
+* The optimal decision threshold decreases from approximately **0.75–0.80** at lower noise to **0.10–0.30** under extreme noise.
 
 ---
 
@@ -293,11 +301,11 @@ Full reference list: see [`CITATIONS.md`](CITATIONS.md).
 
 ### Die-Layout Generation
 
-| Style | Source / Basis |
-|---|---|
-| **DRAM (octagonal / 6F²)** | US 7,349,232 B2 – “6F² DRAM Cell Design with 3F-Pitch Folded Digitline Sense Amplifier” (Micron). https://patents.google.com/patent/US7349232B2 |
-| **FinFET SRAM** | US 9,012,287 B2 – “Cell Layout for SRAM FinFET Transistors”. https://patents.google.com/patent/US9012287 |
-| **BEOL Interconnect** | imec – “Semi-damascene interconnects with fully self-aligned vias at 18 nm metal pitch”. https://www.imec-int.com/en/articles/imec-demonstrates-semi-damascene-interconnects-fully-self-aligned-vias-18nm-metal-pitch |
+| Style                      | Source / Basis                                                                                                                                                                                                                                                                                                                                        |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **DRAM (octagonal / 6F²)** | US 7,349,232 B2 – “6F² DRAM Cell Design with 3F-Pitch Folded Digitline Sense Amplifier” (Micron). [https://patents.google.com/patent/US7349232B2](https://patents.google.com/patent/US7349232B2)                                                                                                                                                      |
+| **FinFET SRAM**            | US 9,012,287 B2 – “Cell Layout for SRAM FinFET Transistors”. [https://patents.google.com/patent/US9012287](https://patents.google.com/patent/US9012287)                                                                                                                                                                                               |
+| **BEOL Interconnect**      | imec – “Semi-damascene interconnects with fully self-aligned vias at 18 nm metal pitch”. [https://www.imec-int.com/en/articles/imec-demonstrates-semi-damascene-interconnects-fully-self-aligned-vias-18nm-metal-pitch](https://www.imec-int.com/en/articles/imec-demonstrates-semi-damascene-interconnects-fully-self-aligned-vias-18nm-metal-pitch) |
 
 ### SEM Noise Model
 
@@ -314,5 +322,10 @@ Full reference list: see [`CITATIONS.md`](CITATIONS.md).
 
 ## 7. License
 
-This project is released under the **MIT License**.  
+This project is released under the **MIT License**.
 See the [LICENSE](LICENSE) file for the full license text.
+
+```
+
+Source reproduced from your uploaded Markdown file. :contentReference[oaicite:0]{index=0}
+```
