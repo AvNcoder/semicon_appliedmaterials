@@ -4,6 +4,10 @@ SEMICON India Hackathon 2026 – Applied Materials Problem Statement
 
 ---
 
+Repository: https://github.com/AvNcoder/semicon_appliedmaterials
+
+---
+
 ## 1. Problem Description
 
 In semiconductor manufacturing, SEM (Scanning Electron Microscope) inspection tools must repeatedly locate a known high-magnification reference pattern inside a wider, noisier, lower-magnification field of view. Stage drift, vibration and thermal effects cause the tool to land slightly off-target.
@@ -24,7 +28,6 @@ The system includes:
 ## 2. System Requirements & Installation
 
 ### Requirements
-
 - Python 3.10+
 - OS: Windows / Linux / macOS
 - See [`requirements.txt`](requirements.txt) for the full package list  
@@ -77,12 +80,15 @@ semicon_appliedmaterials/
 │   ├── visualize.py
 │   └── noise_sweep.py
 │
-├── predict.py
+├── generate_dataset.py      # standalone generator (style / num / out)
+├── predict.py               # standalone inference (hackathon contract)
 ├── cli.py
+├── CITATIONS.md
+├── requirements.txt
 └── results/
 ```
 
-### 3.2 Synthetic Dataset Generation (`Fixed/`)
+### 3.2 Synthetic Dataset Generation (`Fixed/` + `generate_dataset.py`)
 
 Each generator builds a realistic periodic die layout (DRAM-style or FinFET-style), embeds a unique high-mag patch, and applies a physics-informed SEM noise stack:
 
@@ -101,12 +107,12 @@ Each generator builds a realistic periodic die layout (DRAM-style or FinFET-styl
 
 Four styles are generated (400 pairs each):
 
-| Style | Folder | Character |
-|---|---|---|
-| dram_octagonal | data_1 | Orthogonal word-line / bit-line DRAM |
-| dram_6f2 | data_2 | 6F² oblique active-moat DRAM |
-| finfet_sram | data_3 | Parallel fins + gate bars |
-| beol_interconnect | data_4 | Dual-layer M1/M2 + self-aligned vias |
+| Style                | Folder   | Character                              |
+|----------------------|----------|----------------------------------------|
+| dram_octagonal       | data_1   | Orthogonal word-line / bit-line DRAM   |
+| dram_6f2             | data_2   | 6F² oblique active-moat DRAM           |
+| finfet_sram          | data_3   | Parallel fins + gate bars              |
+| beol_interconnect    | data_4   | Dual-layer M1/M2 + self-aligned vias   |
 
 ### 3.3 Localization Algorithm (`driftsense/`)
 
@@ -139,12 +145,12 @@ Four styles are generated (400 pairs each):
 
 **Measured performance on the full 400-sample sets**
 
-| Style | Success @ 5 px | Mean Error | Failures | Mean Latency |
-|---|---:|---:|---:|---:|
-| dram_6f2 | **100.0 %** | 0.66 px | 0 | 2.29 s |
-| finfet_sram | **92.2 %** | 25.64 px | 31 | 2.70 s |
-| dram_octagonal | **89.5 %** | 40.36 px | 42 | 2.17 s |
-| beol_interconnect | **87.5 %** | 43.46 px | 50 | 2.22 s |
+| Style                | Success @ 5 px | Mean Error | Failures | Mean Latency |
+|----------------------|----------------|------------|----------|--------------|
+| dram_6f2             | **100.0 %**    | 0.66 px    | 0        | 2.29 s       |
+| finfet_sram          | **92.2 %**     | 25.64 px   | 31       | 2.70 s       |
+| dram_octagonal       | **89.5 %**     | 40.36 px   | 42       | 2.17 s       |
+| beol_interconnect    | **87.5 %**     | 43.46 px   | 50       | 2.22 s       |
 
 Average success across all 1 600 images ≈ **92.3 %**.  
 Computation time on a single 1000×1000 pair is reported as required by the problem statement.
@@ -157,12 +163,12 @@ Following the PPT instruction **“Sweep, don’t guess”**:
 - Precision–Recall curves are obtained by sweeping the match-score threshold.
 - The best-F1 threshold and usable operating region are recorded.
 
-| Style | Low (1×) | Medium (2.5×) | High (5×) | Extreme (10×) |
-|---|---:|---:|---:|---:|
-| dram_octagonal | 0.902 @ 0.75 | 0.891 @ 0.40 | 0.893 @ 0.25 | 0.844 @ 0.15 |
-| dram_6f2 | 0.984 @ 0.80 | 0.945 @ 0.65 | 0.789 @ 0.45 | 0.716 @ 0.30 |
-| finfet_sram | 0.909 @ 0.80 | 0.800 @ 0.55 | 0.758 @ 0.35 | 0.641 @ 0.20 |
-| beol_interconnect | 0.837 @ 0.75 | 0.866 @ 0.35 | 0.958 @ 0.25 | 0.873 @ 0.15 |
+| Style                | Low (1×)     | Medium (2.5×) | High (5×)    | Extreme (10×) |
+|----------------------|--------------|---------------|--------------|---------------|
+| dram_octagonal       | 0.902 @ 0.75 | 0.891 @ 0.40  | 0.893 @ 0.25 | 0.844 @ 0.15  |
+| dram_6f2             | 0.984 @ 0.80 | 0.945 @ 0.65  | 0.789 @ 0.45 | 0.716 @ 0.30  |
+| finfet_sram          | 0.909 @ 0.80 | 0.800 @ 0.55  | 0.758 @ 0.35 | 0.641 @ 0.20  |
+| beol_interconnect    | 0.837 @ 0.75 | 0.866 @ 0.35  | 0.958 @ 0.25 | 0.873 @ 0.15  |
 
 The method remains usable up to **5× noise**, with clear degradation at the **10× Extreme** level.
 
@@ -188,7 +194,18 @@ cd semicon_appliedmaterials
 
 ### Generate datasets
 
-Pre-generated datasets are already included, so this is optional.
+**Recommended (standalone entry-point):**
+
+```bash
+python generate_dataset.py --style dram_6f2 --num 30 --out ./my_data
+python generate_dataset.py --style finfet_sram --num 50 --out ./Fixed/data_3
+python generate_dataset.py --style beol_interconnect --num 10 --out ./tmp_beol
+python generate_dataset.py --style dram_octagonal --num 400 --out ./Fixed/data_1
+```
+
+Styles: `dram_octagonal` | `dram_6f2` | `finfet_sram` | `beol_interconnect`
+
+The original per-style scripts under `Fixed/` remain available:
 
 ```bash
 python Fixed/fixed_noise_data.py
@@ -197,85 +214,22 @@ python Fixed/fixed_noise_data_finfet6tsram.py
 python Fixed/fixed_noise_data_beol_interconnect.py
 ```
 
-These generate 400 samples each in:
-
-```text
-Fixed/data_1/   # dram_octagonal
-Fixed/data_2/   # dram_6f2
-Fixed/data_3/   # finfet_sram
-Fixed/data_4/   # beol_interconnect
-```
-
 Each dataset contains `ref_XXX.png`, `search_XXX.png`, and `gt_XXX.json`.
 
 ### Evaluate localization
 
-Run all four styles:
-
 ```bash
-python cli.py evaluate
+python cli.py evaluate                          # all styles
+python cli.py evaluate --style dram_octagonal   # one style
 ```
 
-Run a single style:
-
-```bash
-python cli.py evaluate --style dram_octagonal
-```
-
-Valid styles:
-
-```text
-dram_octagonal
-dram_6f2
-finfet_sram
-beol_interconnect
-```
-
-Results are written to:
-
-```text
-results/<style>/
-├── results.csv
-└── summary.json
-```
-
-### Visualize failures
+### Visualize failures / inspect a sample
 
 ```bash
 python cli.py visualize
-```
-
-For one style:
-
-```bash
 python cli.py visualize --style finfet_sram
-```
-
-Failure overlays are saved under:
-
-```text
-results/<style>/failures/
-```
-
-### Inspect a sample
-
-```bash
 python cli.py show --style dram_octagonal --sample 7
 ```
-
-The preview is saved under:
-
-```text
-results/<style>/previews/
-```
-
-### Confusion matrix
-
-```bash
-python evaluation/confusion_matrix.py
-```
-
-Evaluates genuine and mismatched reference/search pairs and reports TP, TN, FP and FN.
 
 ### Noise robustness
 
@@ -283,37 +237,11 @@ Evaluates genuine and mismatched reference/search pairs and reports TP, TN, FP a
 python evaluation/noise_sweep.py
 ```
 
-Runs the Precision–Recall sweep at:
-
-```text
-1× / 2.5× / 5× / 10× noise
-```
-
-Outputs:
-
-```text
-results/
-├── precision_recall_vs_noise.json
-└── precision_recall_vs_noise.png
-```
-
 ### Standalone prediction
-
-For one arbitrary image pair:
 
 ```bash
 python predict.py --search search.png --reference ref.png
-```
-
-JSON output:
-
-```bash
 python predict.py --search search.png --reference ref.png --json
-```
-
-Batch prediction:
-
-```bash
 python predict.py --csv pairs.csv --out predictions.csv
 ```
 
@@ -321,10 +249,7 @@ python predict.py --csv pairs.csv --out predictions.csv
 
 ```bash
 # Optional: regenerate datasets
-python Fixed/fixed_noise_data.py
-python Fixed/fixed_noise_data_dram.py
-python Fixed/fixed_noise_data_finfet6tsram.py
-python Fixed/fixed_noise_data_beol_interconnect.py
+python generate_dataset.py --style dram_6f2 --num 30 --out ./demo_data
 
 # Evaluate
 python cli.py evaluate
@@ -332,8 +257,7 @@ python cli.py evaluate
 # Analyze failures
 python cli.py visualize
 
-# Additional analysis
-python evaluation/confusion_matrix.py
+# Noise analysis
 python evaluation/noise_sweep.py
 ```
 
@@ -343,12 +267,12 @@ python evaluation/noise_sweep.py
 
 Evaluation was performed on **400 samples per style (1 600 samples total)**.
 
-| Style | Success @ 5 px | Mean Error | Failures | Mean Latency |
-|---|---:|---:|---:|---:|
-| **dram_6f2** | **100.0 %** | 0.66 px | 0 | 2.29 s |
-| **finfet_sram** | **92.2 %** | 25.64 px | 31 | 2.70 s |
-| **dram_octagonal** | **89.5 %** | 40.36 px | 42 | 2.17 s |
-| **beol_interconnect** | **87.5 %** | 43.46 px | 50 | 2.22 s |
+| Style                  | Success @ 5 px | Mean Error | Failures | Mean Latency |
+|------------------------|----------------|------------|----------|--------------|
+| **dram_6f2**           | **100.0 %**    | 0.66 px    | 0        | 2.29 s       |
+| **finfet_sram**        | **92.2 %**     | 25.64 px   | 31       | 2.70 s       |
+| **dram_octagonal**     | **89.5 %**     | 40.36 px   | 42       | 2.17 s       |
+| **beol_interconnect**  | **87.5 %**     | 43.46 px   | 50       | 2.22 s       |
 
 **Overall:** ≈ 92.3 % average success across 1 600 samples.  
 **Latency:** Mean inference time ≈ 2.2–2.7 s per pair (reported as required by the problem statement).
@@ -364,6 +288,8 @@ Precision–Recall was evaluated at **1×, 2.5×, 5× and 10× noise**.
 ---
 
 ## 6. Sources & Citations
+
+Full reference list: see [`CITATIONS.md`](CITATIONS.md).
 
 ### Die-Layout Generation
 
