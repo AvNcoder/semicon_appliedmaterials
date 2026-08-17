@@ -1,9 +1,28 @@
-#python
+# Python
 __pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
 
-#generated
-*.npy
-*.png
-*.jpg
-*.jpeg
-*.json
+# Virtual environments
+.venv/
+venv/
+env/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Large / local-only generated data (optional)
+# Fixed/data_1/
+# Fixed/data_2/
+# Fixed/data_3/
+# Fixed/data_4/
+
+# Temp outputs
+tmp/
+demo_data/
+*.log
