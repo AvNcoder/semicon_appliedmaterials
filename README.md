@@ -1,5 +1,5 @@
 
-# Drift-Sense
+# 🔬 Drift-Sense
 **AI-Powered Navigation-Error Recovery for Wafer Inspection Tools**  
 SEMICON India Hackathon 2026 – Applied Materials Problem Statement
 
@@ -7,7 +7,7 @@ Repository: https://github.com/AvNcoder/semicon_appliedmaterials
 
 ---
 
-## 1. Problem Description
+## 🎯 1. Problem Description
 
 In semiconductor manufacturing, SEM (Scanning Electron Microscope) inspection tools must repeatedly locate a known high-magnification reference pattern inside a wider, noisier, lower-magnification field of view. Stage drift, vibration and thermal effects cause the tool to land slightly off-target.
 
@@ -24,25 +24,25 @@ The system includes:
 
 ---
 
-## 2. System Requirements & Installation
+## ⚙️ 2. System Requirements & Installation
 
-### Requirements
+### 📋 Requirements
 - Python 3.10+
 - OS: Windows / Linux / macOS
 - See [`requirements.txt`](requirements.txt) for the full package list  
   (main libraries: `numpy`, `opencv-python`, `Pillow`, `scipy`, `matplotlib`)
 
-### Installation
+### 🛠️ Installation
 
 ```bash
 git clone https://github.com/AvNcoder/semicon_appliedmaterials.git
 cd semicon_appliedmaterials
 pip install -r requirements.txt
-
 ```
+
 ---
 
-## 3. How the System Works
+## 🧠 3. How the System Works
 
 Drift-Sense follows the exact problem contract defined in the SEMICON / Applied Materials brief:
 
@@ -50,7 +50,7 @@ Drift-Sense follows the exact problem contract defined in the SEMICON / Applied 
 
 The repository implements this end-to-end.
 
-### 3.1 Repository Layout
+### 📁 3.1 Repository Layout
 
 ```text
 semicon_appliedmaterials/
@@ -87,7 +87,7 @@ semicon_appliedmaterials/
 └── results/
 ```
 
-### 3.2 Synthetic Dataset Generation (`Fixed/` + `generate_dataset.py`)
+### 🧪 3.2 Synthetic Dataset Generation (`Fixed/` + `generate_dataset.py`)
 
 Each generator builds a realistic periodic die layout (DRAM-style or FinFET-style), embeds a unique high-mag patch, and applies a physics-informed SEM noise stack:
 
@@ -114,7 +114,7 @@ Four styles are generated (400 pairs each):
 | finfet_sram       | data_3 | Parallel fins + gate bars            |
 | beol_interconnect | data_4 | Dual-layer M1/M2 + self-aligned vias |
 
-### 3.3 Localization Algorithm (`driftsense/`)
+### 📍 3.3 Localization Algorithm (`driftsense/`)
 
 1. **Multi-scale + multi-angle NCC** (`template_matcher.py`)
    The reference is resized across `DEFAULT_SCALES` (covers ±20 % generator jitter) and rotated across `DEFAULT_ANGLES` (±3°).
@@ -134,7 +134,7 @@ Four styles are generated (400 pairs each):
 5. **Confidence gate**
    A match is accepted only if `score ≥ MIN_SCORE` (default 0.35, justified by the PR-vs-noise sweep).
 
-### 3.4 Evaluation & Metrics (`evaluation/`)
+### 📊 3.4 Evaluation & Metrics (`evaluation/`)
 
 * `cli.py evaluate` / `evaluate.py` runs the localizer over every sample of a style and writes:
 
@@ -156,7 +156,7 @@ Four styles are generated (400 pairs each):
 Average success across all 1 600 images ≈ **92.3 %**.
 Computation time on a single 1000×1000 pair is reported as required by the problem statement.
 
-### 3.5 Noise-Robustness Analysis (`noise_sweep.py`)
+### 🌫️ 3.5 Noise-Robustness Analysis (`noise_sweep.py`)
 
 Following the PPT instruction **“Sweep, don’t guess”**:
 
@@ -173,7 +173,7 @@ Following the PPT instruction **“Sweep, don’t guess”**:
 
 The method remains usable up to **5× noise**, with clear degradation at the **10× Extreme** level.
 
-### 3.6 Standalone Predictor (`predict.py`)
+### 🚀 3.6 Standalone Predictor (`predict.py`)
 
 Implements the exact hackathon contract:
 
@@ -185,7 +185,7 @@ Returns `pred_x`, `pred_y`, `score`, `matched` and `time_ms` for any 1000×1000 
 
 ---
 
-## 4. Commands
+## 💻 4. Commands
 
 Run all commands from the repository root:
 
@@ -193,7 +193,7 @@ Run all commands from the repository root:
 cd semicon_appliedmaterials
 ```
 
-### Generate datasets
+### 🧪 Generate datasets
 
 **Recommended (standalone entry-point):**
 
@@ -217,14 +217,14 @@ python Fixed/fixed_noise_data_beol_interconnect.py
 
 Each dataset contains `ref_XXX.png`, `search_XXX.png`, and `gt_XXX.json`.
 
-### Evaluate localization
+### 📊 Evaluate localization
 
 ```bash
 python cli.py evaluate                          # all styles
 python cli.py evaluate --style dram_octagonal   # one style
 ```
 
-### Visualize failures / inspect a sample
+### 🔎 Visualize failures / inspect a sample
 
 ```bash
 python cli.py visualize
@@ -232,13 +232,13 @@ python cli.py visualize --style finfet_sram
 python cli.py show --style dram_octagonal --sample 7
 ```
 
-### Noise robustness
+### 🌫️ Noise robustness
 
 ```bash
 python evaluation/noise_sweep.py
 ```
 
-### Standalone prediction
+### 🚀 Standalone prediction
 
 ```bash
 python predict.py --search search.png --reference ref.png
@@ -246,7 +246,7 @@ python predict.py --search search.png --reference ref.png --json
 python predict.py --csv pairs.csv --out predictions.csv
 ```
 
-### Recommended order
+### ▶️ Recommended order
 
 ```bash
 # Optional: regenerate datasets
@@ -264,7 +264,7 @@ python evaluation/noise_sweep.py
 
 ---
 
-## 5. Results
+## 📈 5. Results
 
 Evaluation was performed on **400 samples per style (1 600 samples total)**.
 
@@ -278,7 +278,7 @@ Evaluation was performed on **400 samples per style (1 600 samples total)**.
 **Overall:** ≈ 92.3 % average success across 1 600 samples.
 **Latency:** Mean inference time ≈ 2.2–2.7 s per pair (reported as required by the problem statement).
 
-### Noise Robustness
+### 🌫️ Noise Robustness
 
 Precision–Recall was evaluated at **1×, 2.5×, 5× and 10× noise**.
 
@@ -295,11 +295,11 @@ Precision–Recall was evaluated at **1×, 2.5×, 5× and 10× noise**.
 
 ---
 
-## 6. Sources & Citations
+## 📚 6. Sources & Citations
 
 Full reference list: see [`CITATIONS.md`](CITATIONS.md).
 
-### Die-Layout Generation
+### 🧩 Die-Layout Generation
 
 | Style                      | Source / Basis                                                                                                                                                                                                                                                                                                                                        |
 | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -307,25 +307,27 @@ Full reference list: see [`CITATIONS.md`](CITATIONS.md).
 | **FinFET SRAM**            | US 9,012,287 B2 – “Cell Layout for SRAM FinFET Transistors”. [https://patents.google.com/patent/US9012287](https://patents.google.com/patent/US9012287)                                                                                                                                                                                               |
 | **BEOL Interconnect**      | imec – “Semi-damascene interconnects with fully self-aligned vias at 18 nm metal pitch”. [https://www.imec-int.com/en/articles/imec-demonstrates-semi-damascene-interconnects-fully-self-aligned-vias-18nm-metal-pitch](https://www.imec-int.com/en/articles/imec-demonstrates-semi-damascene-interconnects-fully-self-aligned-vias-18nm-metal-pitch) |
 
-### SEM Noise Model
+### 🔊 SEM Noise Model
 
 1. Timischl et al. (2012) – “A statistical model of signal-noise in scanning electron microscopy,” *Scanning* – Poisson + Gaussian shot/readout model.
 2. Jin et al. (2015) – “Correction of image drift and distortion in a scanning electron microscopy,” *Journal of Microscopy* – stage drift and line-scan jitter.
 3. Muller et al. (2006) – “Room design for high-performance electron microscopy,” *Ultramicroscopy* – AC-mains electromagnetic pickup.
 
-### Classical Localization Algorithm
+### 🎯 Classical Localization Algorithm
 
 1. US 6,399,953 B1 – SEM feature matching using the normalized correlation coefficient method.
 2. US 8,089,612 B2 – position detection using coarse correlation followed by local refinement.
 
 ---
 
-## 7. License
+## 📄 7. License
 
 This project is released under the **MIT License**.
 See the [LICENSE](LICENSE) file for the full license text.
 
 ```
 
-Source reproduced from your uploaded Markdown file. :contentReference[oaicite:0]{index=0}
+I also generated the updated `.md` file directly:
+
+[Download the updated README](sandbox:/mnt/data/Drift-Sense_README_emoji.md)
 ```
