@@ -56,19 +56,19 @@ def main():
     os.makedirs(args.out, exist_ok=True)
 
     if args.style == "dram_octagonal":
-        from fixed_noise_data import generate_dram_sem_dataset
+        from Fixed.fixed_noise_data import generate_dram_sem_dataset
         generate_dram_sem_dataset(output_dir=args.out, num_samples=args.num)
 
     elif args.style == "dram_6f2":
-        from fixed_noise_data_dram import generate_dram_sem_dataset
+        from Fixed.fixed_noise_data_dram import generate_dram_sem_dataset
         generate_dram_sem_dataset(output_dir=args.out, num_samples=args.num)
 
     elif args.style == "finfet_sram":
-        from fixed_noise_data_finfet6tsram import generate_finfet_sem_dataset
+        from Fixed.fixed_noise_data_finfet6tsram import generate_finfet_sem_dataset
         generate_finfet_sem_dataset(output_dir=args.out, num_samples=args.num)
 
     elif args.style == "beol_interconnect":
-        from fixed_noise_data_beol_interconnect import generate_beol_sem_dataset
+        from Fixed.fixed_noise_data_beol_interconnect import generate_beol_sem_dataset
         generate_beol_sem_dataset(output_dir=args.out, num_samples=args.num)
 
     print(f"\nDone. {args.num} pairs written to: {os.path.abspath(args.out)}")
